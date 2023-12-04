@@ -129,10 +129,10 @@ void writeAuthors(){ // to add records to data file to test my functions
 
     Author data[] = {
             {"1", "AA1 A2", "222 Dokki St"},   // offset = 4
-            {"2", "B1 B2", "23 Dokki St"},     // offset = 26
-            {"3", "C111 C2", "2 Dokki St"},    // offset = 43
-            {"4", "D31 D2", "2566 Dokki St"},  // offset = 71
-            {"5", "E5551 E2", "24446 Dokki St"}// offset = 96
+            {"2", "B1 B2", "23 Dokki St"},     // offset = 28
+            {"3", "C111 C2", "2 Dokki St"},    // offset = 50
+            {"4", "D31 D2", "2566 Dokki St"},  // offset = 73
+            {"5", "E5551 E2", "24446 Dokki St"}// offset = 98
     };
 
     short header = -1;
