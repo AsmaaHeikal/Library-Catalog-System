@@ -1,0 +1,3 @@
+C:/Users/Salma/OneDrive/Documents/GitHub/Library-Catalog-System/cmake-build-debug/CMakeFiles/Library_Catalog_System.dir
+C:/Users/Salma/OneDrive/Documents/GitHub/Library-Catalog-System/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Salma/OneDrive/Documents/GitHub/Library-Catalog-System/cmake-build-debug/CMakeFiles/rebuild_cache.dir
