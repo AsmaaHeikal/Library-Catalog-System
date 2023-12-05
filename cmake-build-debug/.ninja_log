@@ -1,23 +1,5 @@
 # ninja log v5
-2	1206	7234188558870009	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1207	1344	7234188560186425	Library_Catalog_System.exe	51147e7878392192
-4	1071	7234204029709870	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1072	1207	7234204031043971	Library_Catalog_System.exe	51147e7878392192
-4	1097	7234204229518881	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1098	1226	7234204230743451	Library_Catalog_System.exe	51147e7878392192
-4	1936	7234206152850364	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1937	2181	7234206155166185	Library_Catalog_System.exe	51147e7878392192
-3	1067	7234225925231924	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1067	1321	7234225927715503	Library_Catalog_System.exe	51147e7878392192
-3	1335	7234227533457740	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1336	1514	7234227535138834	Library_Catalog_System.exe	51147e7878392192
-3	1099	7234249134376926	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1099	1231	7234249135638967	Library_Catalog_System.exe	51147e7878392192
-3	1080	7234250384497463	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1080	1192	7234250385558983	Library_Catalog_System.exe	51147e7878392192
-4	1255	7234250586107927	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1256	1402	7234250587544489	Library_Catalog_System.exe	51147e7878392192
-4	1644	7234251729632882	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1645	1787	7234251731039731	Library_Catalog_System.exe	51147e7878392192
-4	1382	7234268542343115	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
-1383	1545	7234268543926728	Library_Catalog_System.exe	51147e7878392192
+5	1340	7235001570710057	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
+1342	1481	7235001572084610	Library_Catalog_System.exe	51147e7878392192
+5	1308	7235001761271182	CMakeFiles/Library_Catalog_System.dir/main.cpp.obj	272560085ab75c0b
+1309	1440	7235001762544817	Library_Catalog_System.exe	51147e7878392192
