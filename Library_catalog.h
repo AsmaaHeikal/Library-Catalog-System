@@ -45,9 +45,9 @@ public:
         dataFile.seekg(bitOffset, ios::beg);
 
         //getting the length indicator of the record
-        char lengthIndicator[2];
-        dataFile.read(lengthIndicator, 2);
-        int recLen = stoi(lengthIndicator);
+        short lengthIndicator;
+        dataFile.read((char*)&lengthIndicator, 2);
+        int recLen = lengthIndicator;
         bitOffset += 2;
 
         while (!dataFile.eof()) {
@@ -66,8 +66,8 @@ public:
 
             //getting the length indicator of the next record
             dataFile.seekg((recLen - 2), ios::cur);
-            dataFile.read(lengthIndicator, 2);
-            recLen = stoi(lengthIndicator);
+            dataFile.read((char*)&lengthIndicator, 2);
+            recLen = lengthIndicator;
 
         }
 
@@ -249,14 +249,14 @@ public:
         dataFile.close();
     }
 
-    void searchPI(string id, const string &file, const string &file2) {
+    int searchPI(string id, const string &file, const string &file2) {
         ifstream indexFile(file);
         ifstream File(file2);
 
         //check that datafile is full
         if (!indexFile.is_open()) {
             cerr << "Error opening files." << endl;
-            return;
+            return -1;
         }
 
         indexFile.seekg(0, ios::beg);
@@ -268,17 +268,20 @@ public:
             getline(indexFile, entry.second);
             indx.push_back(entry);
         }
+        int bitoffset=-1;
         if (binarySearch(indx, id).first) {
             cout << "Found: ";
-            int bitoffset = stoi(binarySearch(indx, id).second.second);
+            bitoffset = stoi(binarySearch(indx, id).second.second);
+            cout << bitoffset << endl;
             search(bitoffset, file2);
-            return;
-        } else cout << "not found";
+        } else {
+            cout << "not found\n";
+        }
 
 
         indexFile.close();
         File.close();
-
+        return bitoffset;
     }
 
     void searchSI(string id, const string &SIfile, const string &file, const string &PIfile) {
@@ -497,12 +500,13 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
         if (stoi(index[mid].first) == ID) {
             result.first = true;
             result.second = index[mid];
-            return result;
         } else if (stoi(index[mid].first) < ID) {
             low = mid + 1;
         } else {
             high = mid - 1;
         }
+        return result;
+
     }
 
 #endif //LIBRARY_CATALOG_SYSTEM_LIBRARY_CATALOG_H
