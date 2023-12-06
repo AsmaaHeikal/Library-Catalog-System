@@ -378,28 +378,6 @@ public:
     }
 
 
-};
-
-pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, string>> &index, const string &id) {
-    int ID = stoi(id);
-    int low = 0;
-    int high = index.size() - 1;
-    pair<bool, pair<string, string>> result;
-    result.first = false;
-
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        if (stoi(index[mid].first) == ID) {
-            result.first = true;
-            result.second = index[mid];
-            return result;
-        } else if (stoi(index[mid].first) < ID) {
-            low = mid + 1;
-        } else {
-            high = mid - 1;
-        }
-    }
-
     void deleteRecord(char id[], string filename){
         fstream file(filename, ios::out | ios::in | ios::binary);
         if(!file.is_open()){
@@ -414,7 +392,7 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
             std::cout << "Deletion failed -> id not found\n";
             return;
         }
-        deleteAuthorPI(id, filename);
+        deleteRecordPI(id, filename);
         // back to Header to find the start of available list
         short header, deletedRecordSize, currSize;
         file.seekg(0, ios::beg);
@@ -505,5 +483,26 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
 
 }
 
+};
+
+pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, string>> &index, const string &id) {
+    int ID = stoi(id);
+    int low = 0;
+    int high = index.size() - 1;
+    pair<bool, pair<string, string>> result;
+    result.first = false;
+
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        if (stoi(index[mid].first) == ID) {
+            result.first = true;
+            result.second = index[mid];
+            return result;
+        } else if (stoi(index[mid].first) < ID) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
 
 #endif //LIBRARY_CATALOG_SYSTEM_LIBRARY_CATALOG_H
