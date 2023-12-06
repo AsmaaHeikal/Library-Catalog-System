@@ -327,9 +327,9 @@ public:
     }
 
     // ============= delete ================
-    bool deleteAuthorPI(string id){
+    bool deleteRecordPI(string id, string filename){
         // load primary index on vector of pairs <id, offset>
-        fstream file("authorsPI.txt", ios::in|ios::out|ios::binary);
+        fstream file(filename, ios::in|ios::out|ios::binary);
         vector<pair<string,  string> > primaryIndex;
         pair<string, string> entry;
 
@@ -358,7 +358,7 @@ public:
         primaryIndex.erase(primaryIndex.begin() + mid);
 
         // rewrite index to file
-        file.open("authorsPI.txt", ios::trunc|ios::out);
+        file.open(filename, ios::trunc|ios::out);
         if(!file.is_open()){
             cout << "Error: failed to open index file\n";
             return false;
@@ -400,6 +400,108 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
         }
     }
 
+    void deleteRecord(char id[], string filename){
+        fstream file(filename, ios::out | ios::in | ios::binary);
+        if(!file.is_open()){
+            std::cout << "Deletion failed -> fail to open file\n";
+            return;
+        }
+
+        // call search function to return the offset of that record if exists
+        short offset = searchPI(id, "authorsPI.txt", "authors.txt"); // add here search call instead
+//    cout << "from delete "<<offset <<endl;
+        if (offset == -1) {
+            std::cout << "Deletion failed -> id not found\n";
+            return;
+        }
+        deleteAuthorPI(id, filename);
+        // back to Header to find the start of available list
+        short header, deletedRecordSize, currSize;
+        file.seekg(0, ios::beg);
+        file.read((char*)&header, sizeof(header));
+
+        file.seekg(offset-2, ios :: beg); // length indicator of deleted record
+        file.read((char*)&deletedRecordSize, sizeof(deletedRecordSize));
+
+        // not the first record to delete from file
+        if(header != -1)
+        {
+            file.seekg(header - 2, ios::beg); // extract size of first record in avail list (size of first record in avail list (worst fit): largest size)
+            file.read((char*)&currSize, sizeof(currSize));
+        }
+
+        // empty avail list or deleted record size is the largest
+        // empty => header = deletedRecordOffset and deletedRecord: overwrite the first 3 bytes by *-1 (header = -1)
+        // currSize <= deletedRecordSize => header = deletedRecordOffset and deletedRecord: overwrite the first 3 bytes by *currOffset as (header = currOffset)
+        if(header == -1 or currSize<=deletedRecordSize){
+            file.seekp(offset, ios::beg);
+            file.write("*", 1);
+            file.write((char*)&header, sizeof(header)); // let the deleted record points to the second largest
+            file.seekg(0, ios::beg);
+            file.write((char*)&offset, sizeof(offset));
+            return;
+        }
+
+        short currOffset = header, nextOffset, nextSize;
+        file.seekg(currOffset+1 , ios::beg); // skip * to read the next offset
+        file.read((char*)&nextOffset , sizeof(short));
+
+        // only one item in avail list and its size is >= deleted item size
+        // let curr on avail list points to deleted item
+        if(nextOffset == -1 and currSize >= deletedRecordSize){
+            file.seekp(currOffset+1, ios::beg); // skip * to read the next offset
+            file.write((char*)&offset, sizeof(offset));
+            file.seekp(offset, ios::beg);
+            file.write("*", 1);
+            file.write((char*)&nextOffset, sizeof(nextOffset));
+            return;
+        }
+
+        // only one item in avail list and its size is < deleted item size
+        // let deleted item  points to curr item on avail list
+        if(nextOffset == -1 ){
+            file.seekp(offset, ios::beg);
+            file.write("*", 1);
+            file.write((char*)&currOffset, sizeof(currOffset));
+            file.seekp(currOffset+1, ios::beg);
+            file.write("-1", sizeof(short));
+            return;
+        }
+
+        file.seekg(nextOffset-2, ios::beg);   // extract size of next item
+        file.read((char*)&nextSize , sizeof(nextSize));
+
+        while(true){
+            // right place for deleted item is found
+            if(nextSize <= deletedRecordSize){
+                file.seekp(currOffset+1, ios::beg); // skip * to write the next offset of currOffset
+                file.write((char*)&offset, sizeof(offset));
+                file.seekp(offset, ios::beg);
+                file.write("*", 1); // overwrite one byte by *
+                file.write((char*)&nextOffset, sizeof(nextOffset)); // overwrite 2 bytes by next offset of deletedOffset
+                return;
+            }
+            else
+            {
+                currOffset = nextOffset; // advance the curr to next
+                file.seekp(nextOffset+1, ios::beg);
+                file.read((char*)&nextOffset , sizeof(nextOffset));
+
+                if(nextOffset == -1){ // reach the end of avail list
+                    file.seekp(currOffset + 1, ios::beg); // skip * to write the next offset of currOffset
+                    file.write((char*)&offset, sizeof(offset));
+                    file.seekp(offset, ios::beg);
+                    file.write("*", 1);
+                    file.write((char*)&nextOffset, sizeof(nextOffset));
+                    break;
+                }
+
+                file.seekg(nextOffset-2, ios::beg); // extract size of next
+                file.read((char*)&nextSize , sizeof(nextSize));
+            }
+        }
+        file.close();
+    }
 
 }
 
