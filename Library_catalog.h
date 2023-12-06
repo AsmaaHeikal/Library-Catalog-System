@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 #ifndef LIBRARY_CATALOG_SYSTEM_LIBRARY_CATALOG_H
@@ -262,12 +263,11 @@ public:
         indexFile.seekg(0, ios::beg);
         vector<pair<string, string>> indx;
         pair<string, string> entry;
-        while (!indexFile.eof()) {
 
-            getline(indexFile, entry.first, '|');
-            getline(indexFile, entry.second);
+        while (getline(indexFile, entry.first, '|') && getline(indexFile, entry.second)) {
             indx.push_back(entry);
         }
+
         int bitoffset=-1;
         if (binarySearch(indx, id).first) {
             cout << "Found: ";
@@ -484,7 +484,94 @@ public:
         file.close();
     }
 
-}
+// ######################################
+
+// only for testing purposes
+    void writeAuthors(){ // to add records to data file to test my functions
+        fstream file("authors.txt", ios::binary|ios::in|ios::out);
+        if(!file.is_open()){
+            cout << "Error: opening file failed\n";
+            return;
+        }
+
+        Author data[] = {
+                {"1", "AA1 A2", "222 Dokki St"},   // offset = 4
+                {"2", "B1 B2", "23 Dokki St"},     // offset = 28
+                {"3", "C111 C2", "2 Dokki St"},    // offset = 50
+                {"4", "D31 D2", "2566 Dokki St"},  // offset = 73
+                {"5", "E5551 E2", "24446 Dokki St"}// offset = 98
+        };
+
+        short header = -1;
+        file.write((char*)&header, sizeof(header)); // header
+
+        for(int i = 0; i <  5; i++){
+            short size = strlen(data[i].authorID) + strlen(data[i].authorName) + strlen(data[i].address)+3;
+            file.write((char*)&size, sizeof(size));
+            file.write(data[i].authorID, strlen(data[i].authorID));
+            file.write("|", 1);
+            file.write(data[i].authorName, strlen(data[i].authorName));
+            file.write("|", 1);
+            file.write(data[i].address, strlen(data[i].address));
+            file.write("|", 1);
+        }
+        cout << "records added successfully\n";
+        file.close();
+    }
+
+// only for testing purposes
+    void writeBooks(){
+    }
+
+    void readAuthors() {
+        ifstream file("authors.txt", ios::binary|ios::in|ios::out);
+
+        if (!file.is_open()) {
+            cout << "Error: opening file failed\n";
+            return;
+        }
+
+        short header;
+        file.read((char*)&header, sizeof(header));
+        cout << "Header: "<< header << endl;
+
+        short size;
+        file.read((char*)&size, sizeof(size));
+
+        while (file) {
+            char record[size];
+            file.read(record, size);
+            char mark = record[0];
+
+            if (mark != '*') {
+
+                string authorID, authorName, address;
+
+                int fieldCounter = 0;
+                for(int i  = 0; i < size;i++){
+                    if (record[i]=='|') {
+                        fieldCounter++;
+                        continue;
+                    }
+                    if (fieldCounter==0){
+                        authorID+=record[i];
+                    }
+                    if(fieldCounter==1){
+                        authorName+=record[i];
+                    }
+                    if(fieldCounter==2){
+                        address+=record[i];
+                    }
+                }
+                cout << authorID << "|" << authorName << "|" << address << endl;
+            }
+            file.read((char*)&size, sizeof(size));
+
+        }
+
+        file.close();
+    }
+// ##################################
 
 };
 
@@ -500,13 +587,15 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
         if (stoi(index[mid].first) == ID) {
             result.first = true;
             result.second = index[mid];
+            break;
         } else if (stoi(index[mid].first) < ID) {
             low = mid + 1;
         } else {
             high = mid - 1;
         }
-        return result;
 
     }
+    return result;
+}
 
 #endif //LIBRARY_CATALOG_SYSTEM_LIBRARY_CATALOG_H

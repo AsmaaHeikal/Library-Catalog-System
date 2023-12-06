@@ -1,12 +1,17 @@
 #include "Library_catalog.h"
+
+// fill files with records to test
+
 int main() {
     DB db;
+    db.writeAuthors();
+    db.readAuthors();
 //    db.updatePrimaryIndex("authors.txt", "authorsPI.txt");
 //    db.updatePrimaryIndex("books.txt", "booksPI.txt");
+    db.updatePI("authors.txt", "authorsPI.txt");
+    db.deleteRecord("8", "authors.txt");
 
-    string id;
-    getline(cin,id);
-    db.searchSI(id,"booksSI.txt","books.txt","booksPI.txt");
+//    db.searchSI(id,"booksSI.txt","books.txt","booksPI.txt");
 //    db.searchPI(id,"booksPI.txt","books.txt");
 //    db. updateBooksSI();
 //    db.updateAuthorsSI();
@@ -74,4 +79,5 @@ int main() {
 //        }
 //    }
 }
+
 
