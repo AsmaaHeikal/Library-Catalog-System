@@ -237,9 +237,9 @@ public:
         dataFile.seekg(bitOffset - 2, ios::beg);
 
         //getting the length indicator of the record
-        char lengthIndicator[2];
-        dataFile.read(lengthIndicator, 2);
-        int recLen = stoi(lengthIndicator);
+        short lengthIndicator;
+        dataFile.read((char*)&lengthIndicator, 2);
+        int recLen = lengthIndicator;
 
         string rec;
         for (int i = 0; i < recLen; i++) {
