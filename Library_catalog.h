@@ -438,17 +438,6 @@ public:
             return;
         }
 
-        // only one item in avail list and its size is < deleted item size
-        // let deleted item  points to curr item on avail list
-        if(nextOffset == -1 ){
-            file.seekp(offset, ios::beg);
-            file.write("*", 1);
-            file.write((char*)&currOffset, sizeof(currOffset));
-            file.seekp(currOffset+1, ios::beg);
-            file.write("-1", sizeof(short));
-            return;
-        }
-
         file.seekg(nextOffset-2, ios::beg);   // extract size of next item
         file.read((char*)&nextSize , sizeof(nextSize));
 
