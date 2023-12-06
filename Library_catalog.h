@@ -1,5 +1,6 @@
-#include <bits/stdc++.h>
-
+#include <iostream>
+#include <fstream>
+#include <vector>
 using namespace std;
 
 #ifndef LIBRARY_CATALOG_SYSTEM_LIBRARY_CATALOG_H
@@ -325,6 +326,57 @@ public:
 
     }
 
+    // ============= delete ================
+    bool deleteAuthorPI(string id){
+        // load primary index on vector of pairs <id, offset>
+        fstream file("authorsPI.txt", ios::in|ios::out|ios::binary);
+        vector<pair<string,  string> > primaryIndex;
+        pair<string, string> entry;
+
+        while (getline(file, entry.first, '|') && getline(file,entry.second)) {
+            primaryIndex.push_back(entry);
+        }
+
+        file.close();
+
+        // search using binary search
+        int low = 0, high = primaryIndex.size() - 1, mid=-1;
+        while(low <= high){
+            mid = (high + low) / 2;
+            if(primaryIndex[mid].first < id){
+                low = mid + 1;
+            } else if (primaryIndex[mid].first > id){
+                high = mid - 1;
+            } else {
+                break;
+            }
+        }
+
+        if(low > high ) return false;
+
+        // once found authorId delete entry
+        primaryIndex.erase(primaryIndex.begin() + mid);
+
+        // rewrite index to file
+        file.open("authorsPI.txt", ios::trunc|ios::out);
+        if(!file.is_open()){
+            cout << "Error: failed to open index file\n";
+            return false;
+        }
+
+        for(int i = 0; i < primaryIndex.size(); i++){
+            // if we want our index file fixed length record
+//        file.write((char*)&primaryIndex[i].first, 15);
+//        file.write((char*)&primaryIndex[i].second, sizeof(primaryIndex[i].second));
+            file << primaryIndex[i].first << '|' << primaryIndex[i].second;
+            if(i < primaryIndex.size()-1 )
+                file << "\n";
+        }
+
+        file.close();
+        return true;
+    }
+
 
 };
 
@@ -347,6 +399,7 @@ pair<bool, pair<string, string>> DB::binarySearch(const vector<pair<string, stri
             high = mid - 1;
         }
     }
+
 
 }
 
