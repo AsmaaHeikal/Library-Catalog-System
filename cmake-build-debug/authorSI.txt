@@ -1,5 +1,5 @@
 Emily White|4
 Jane Doe|2
-John Smith|1
 Mark Johnson|3
 Robert Brown|5
+john Smith|

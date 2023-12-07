@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+
 using namespace std;
 
 struct Author {
@@ -19,9 +20,9 @@ void updateBooksSI();
 
 void updateAuthorsSI();
 
-void insertAuthorInPrimary(const char id[],short offset);
+void insertAuthorInPrimary(const char id[], short offset);
 
-void insertName(char name[30],char id[15]);
+void insertName(char name[30], char id[15]);
 
 void Add(Author author);
 
@@ -29,24 +30,24 @@ pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>>
 
 pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>> &index, const string &id);
 
-void search(int bitOffset, const string &file);
+string search(int bitOffset, const string &file);
 
-void searchPI(string id, const string &file, const string &file2);
+int searchPI(string id, const string &file, const string &file2);
 
-void searchSI(string id, const string &SIfile, const string &file, const string &PIfile);
+int searchSI(string id, const string &SIfile, const string &file, const string &PIfile);
 
 
-short cntID=0, CntNameLL = 0 , CntNameSec = 0;
+short cntID = 0, CntNameLL = 0, CntNameSec = 0;
 
 int main() {
 
-//    updatePI("authors.txt", "authorsPI.txt");
+    updatePI("authors.txt", "authorsPI.txt");
 //    updatePI("books.txt", "booksPI.txt");
 //    updateBooksSI();
 //    updateAuthorsSI();
-    string id;
-    getline(cin,id);
-    searchSI(id,"authorSI.txt","authors.txt","authorsPI.txt");
+//    string id;
+//    getline(cin, id);
+//    searchSI(id, "authorSI.txt", "authors.txt", "authorsPI.txt");
 //    searchSI(id,"booksSI.txt","books.txt","booksPI.txt");
 //    searchPI(id,"authorsPI.txt","authors.txt");
 //    searchPI(id,"booksPI.txt","books.txt");
@@ -116,10 +117,6 @@ int main() {
 }
 
 
-
-
-
-
 void updatePI(const string &file, const string &index) {
 
     ifstream dataFile(file);
@@ -161,7 +158,7 @@ void updatePI(const string &file, const string &index) {
         bitOffset += recLen;
 
         //getting the length indicator of the next record
-        dataFile.seekg((recLen - id.length()-1), ios::cur);
+        dataFile.seekg((recLen - id.length() - 1), ios::cur);
         dataFile.read(lengthIndicator, 2);
         recLen = stoi(lengthIndicator);
 
@@ -218,15 +215,15 @@ void updateBooksSI() {
         //adding the id and the bit offset of the record to the vector
 
         bool added = false;
-        for(auto &i : secondaryIndex){
-            if( authorID == to_string(i.first)){
-                i.second+=',';
-                i.second+=id;
+        for (auto &i: secondaryIndex) {
+            if (authorID == to_string(i.first)) {
+                i.second += ',';
+                i.second += id;
                 added = true;
             }
         }
 
-        if(!added){
+        if (!added) {
             p.first = stoi(authorID);
             p.second = id;
             secondaryIndex.push_back(p);
@@ -287,15 +284,15 @@ void updateAuthorsSI() {
         //adding the id and the bit offset of the record to the vector
 
         bool added = false;
-        for(auto &i : secondaryIndex){
-            if( authorName == i.first){
-                i.second+=',';
-                i.second+=id;
+        for (auto &i: secondaryIndex) {
+            if (authorName == i.first) {
+                i.second += ',';
+                i.second += id;
                 added = true;
             }
         }
 
-        if(!added){
+        if (!added) {
             p.first = authorName;
             p.second = id;
             secondaryIndex.push_back(p);
@@ -305,7 +302,7 @@ void updateAuthorsSI() {
 
 
         //getting the length indicator of the next record
-        dataFile.seekg(recLen-3-authorName.length(),ios::cur);
+        dataFile.seekg(recLen - 3 - authorName.length(), ios::cur);
         dataFile.read(lengthIndicator, 2);
         recLen = stoi(lengthIndicator);
 
@@ -321,7 +318,7 @@ void updateAuthorsSI() {
     indexFile.close();
 }
 
-void searchSI(string id, const string &SIfile, const string &file, const string &PIfile) {
+int searchSI(string id, const string &SIfile, const string &file, const string &PIfile) {
     ifstream SIFile(SIfile);
     ifstream PIFile(PIfile);
     ifstream File(file);
@@ -329,7 +326,7 @@ void searchSI(string id, const string &SIfile, const string &file, const string 
     //check that datafile is full
     if (!SIFile.is_open()) {
         cerr << "Error opening files." << endl;
-        return;
+
     }
 
     SIFile.seekg(0, ios::beg);
@@ -342,23 +339,23 @@ void searchSI(string id, const string &SIfile, const string &file, const string 
         indx.push_back(entry);
         SIFile.ignore();  // Ignore the newline character
     }
-    auto x =binarySearch(indx, id);
+    auto x = binarySearch(indx, id);
     if (x.first) {
-        istringstream values ;
+        istringstream values;
         values.str(x.second.second);
-        values.seekg(0,ios::beg);
-        string val ;
+        values.seekg(0, ios::beg);
+        string val;
 
-        while(!values.eof()){
+        while (!values.eof()) {
 
-            getline(values,val,',');
-            searchPI(val,PIfile,file) ;
+            getline(values, val, ',');
+            int bitoffset = searchPI(val, PIfile, file);
+
+            return bitoffset;
 
         }
 
-
-
-    } else cout << "not found";
+    }
 
 
     PIFile.close();
@@ -367,14 +364,13 @@ void searchSI(string id, const string &SIfile, const string &file, const string 
 
 }
 
-void searchPI(string id, const string &file, const string &file2) {
+int searchPI(string id, const string &file, const string &file2) {
     ifstream indexFile(file);
     ifstream File(file2);
 
     //check that datafile is full
     if (!indexFile.is_open()) {
         cerr << "Error opening files." << endl;
-        return;
     }
 
     indexFile.seekg(0, ios::beg);
@@ -391,24 +387,23 @@ void searchPI(string id, const string &file, const string &file2) {
         cout << "Found: ";
 
         int bitoffset = stoi(x.second.second);
-        search(bitoffset, file2);
-        return;
-    } else cout << "not found";
 
+        //search(bitoffset, file2);
+        return bitoffset;
+    } else return -1;
 
     indexFile.close();
     File.close();
 
 }
 
-void search(int bitOffset, const string &file) {
+string search(int bitOffset, const string &file) {
 
     ifstream dataFile(file);
 
     //check that datafile is full
     if (!dataFile.is_open()) {
         cerr << "Error opening files." << endl;
-        return;
     }
 
     //set the cursor at the beginning of the record and subtract 2 to get the length indicator
@@ -423,79 +418,76 @@ void search(int bitOffset, const string &file) {
     for (int i = 0; i < recLen; i++) {
         rec += dataFile.get();
     }
-    cout << rec<< endl;
+    return rec;
     dataFile.close();
 }
 
 void Add(Author author) {
-    fstream out("authors.txt",ios::in|ios::out|ios::app);
-    int RecordSize,IDSize,NameSize, AddressSize;
+    fstream out("authors.txt", ios::in | ios::out | ios::app);
+    int RecordSize, IDSize, NameSize, AddressSize;
     short header;
-    out.seekg(0,ios::beg);
-    out.read((char*)&header,sizeof(header));
-    NameSize=strlen(author.authorName);
-    AddressSize=strlen(author.address);
-    IDSize=strlen(author.authorID);
-    RecordSize=IDSize+NameSize+AddressSize +2;
-    insertName(author.authorName,author.authorID);
-    if(header==-1){
-        out.seekp(0,ios::end);
-        out.write((char*)&RecordSize,sizeof(RecordSize));
-        short end1=out.tellp();
+    out.seekg(0, ios::beg);
+    out.read((char *) &header, sizeof(header));
+    NameSize = strlen(author.authorName);
+    AddressSize = strlen(author.address);
+    IDSize = strlen(author.authorID);
+    RecordSize = IDSize + NameSize + AddressSize + 2;
+    insertName(author.authorName, author.authorID);
+    if (header == -1) {
+        out.seekp(0, ios::end);
+        out.write((char *) &RecordSize, sizeof(RecordSize));
+        short end1 = out.tellp();
 
     }
 }
 
 void insertName(char *name, char *id) {
-    fstream authorSI("authorsSI.txt",ios::in|ios::out);
-    short first=0;
-    short last=CntNameSec-1;
+    fstream authorSI("authorsSI.txt", ios::in | ios::out);
+    short first = 0;
+    short last = CntNameSec - 1;
     short mid;
-    bool found=false;
+    bool found = false;
     char tmp[30];
-    while(first<=last){
-        mid=(first+last)/2;
-        authorSI.seekg(mid*32,ios::beg);
-        authorSI.read((char*)&tmp,sizeof(tmp));
-        if(strcmp(tmp,name)==0){
-            found=true;
+    while (first <= last) {
+        mid = (first + last) / 2;
+        authorSI.seekg(mid * 32, ios::beg);
+        authorSI.read((char *) &tmp, sizeof(tmp));
+        if (strcmp(tmp, name) == 0) {
+            found = true;
             break;
-        }
-        else if(strcmp(tmp,name)<0){
-            first=mid+1;
-        }
-        else{
-            last=mid-1;
+        } else if (strcmp(tmp, name) < 0) {
+            first = mid + 1;
+        } else {
+            last = mid - 1;
         }
     }
     authorSI.close();
-    if(!found){
-        if(CntNameLL==0){
-            authorSI.open("authorsSI.txt",ios::in|ios::out);
-            authorSI.seekg(0,ios::end);
-            authorSI.write((char*)&name,30);
-            authorSI.write((char*)&CntNameLL,sizeof(CntNameLL));
+    if (!found) {
+        if (CntNameLL == 0) {
+            authorSI.open("authorsSI.txt", ios::in | ios::out);
+            authorSI.seekg(0, ios::end);
+            authorSI.write((char *) &name, 30);
+            authorSI.write((char *) &CntNameLL, sizeof(CntNameLL));
             CntNameSec++;
             authorSI.close();
-            fstream nameLL("nameLL.txt",ios::in|ios::out);
-            nameLL.seekg(0,ios::end);
-            nameLL.write(name,30);
-            nameLL.write(id,15);
-            short nega=-1;
-            nameLL.write((char*)&nega,sizeof(nega));
+            fstream nameLL("nameLL.txt", ios::in | ios::out);
+            nameLL.seekg(0, ios::end);
+            nameLL.write(name, 30);
+            nameLL.write(id, 15);
+            short nega = -1;
+            nameLL.write((char *) &nega, sizeof(nega));
             CntNameLL++;
             nameLL.close();
-        }
-        else{
-            authorSI.open("authorsSI.txt",ios::in|ios::out);
-            short offPlace=-1;
-            authorSI.seekg(0,ios::beg);
-            int i=0;
-            while(i<CntNameSec){
+        } else {
+            authorSI.open("authorsSI.txt", ios::in | ios::out);
+            short offPlace = -1;
+            authorSI.seekg(0, ios::beg);
+            int i = 0;
+            while (i < CntNameSec) {
                 char s[30];
-                authorSI.read((char*)&s,sizeof(s));
-                if(strcmp(name,s) < 0){
-                    offPlace=authorSI.tellg();
+                authorSI.read((char *) &s, sizeof(s));
+                if (strcmp(name, s) < 0) {
+                    offPlace = authorSI.tellg();
                 }
             }
         }
@@ -503,68 +495,69 @@ void insertName(char *name, char *id) {
 }
 
 void insertAuthorInPrimary(const char *id, short offset) {
-    fstream authorsPI("authorsPI.txt",ios::in|ios::out);
-    int x=0;
-    for(int i=0;id[i]!='\0';i++){
-        x*=10;
-        x+=id[i]-'0';
+    fstream authorsPI("authorsPI.txt", ios::in | ios::out);
+    int x = 0;
+    for (int i = 0; id[i] != '\0'; i++) {
+        x *= 10;
+        x += id[i] - '0';
     }
-    int tmp=0;
-    short of=0;
-    bool hi=false;
-    if(cntID==0){
-        authorsPI.write((char*)&x,sizeof(x));
-        authorsPI.write((char*)&offset,sizeof(offset));
+    int tmp = 0;
+    short of = 0;
+    bool hi = false;
+    if (cntID == 0) {
+        authorsPI.write((char *) &x, sizeof(x));
+        authorsPI.write((char *) &offset, sizeof(offset));
         cntID++;
         return;
     }
-    authorsPI.read((char*)&tmp,sizeof(tmp));
-    while(authorsPI.good()){
-        if(tmp>x){
-            hi=true;
-            authorsPI.seekg(-4,ios::cur);
-            of=authorsPI.tellg();
+    authorsPI.read((char *) &tmp, sizeof(tmp));
+    while (authorsPI.good()) {
+        if (tmp > x) {
+            hi = true;
+            authorsPI.seekg(-4, ios::cur);
+            of = authorsPI.tellg();
             break;
         }
-        authorsPI.seekg(2,ios::cur);
-        authorsPI.read((char*)&tmp,sizeof(tmp));
+        authorsPI.seekg(2, ios::cur);
+        authorsPI.read((char *) &tmp, sizeof(tmp));
     }
     authorsPI.close();
-    authorsPI.open("authorsPI.txt",ios::in|ios::out);
-    if(!hi){
-        authorsPI.seekg(cntID*6,ios::beg);
-        authorsPI.write((char*)&x,sizeof(x));
-        authorsPI.write((char*)&offset,sizeof(offset));
+    authorsPI.open("authorsPI.txt", ios::in | ios::out);
+    if (!hi) {
+        authorsPI.seekg(cntID * 6, ios::beg);
+        authorsPI.write((char *) &x, sizeof(x));
+        authorsPI.write((char *) &offset, sizeof(offset));
         cntID++;
-    }
-    else{
+    } else {
         authorsPI.seekg((cntID - 1) * 6, ios::beg);
         int numend;
         short ofend;
-        authorsPI.read((char*)& numend, sizeof(numend));
-        authorsPI.read((char*)& ofend, sizeof(ofend));
+        authorsPI.read((char *) &numend, sizeof(numend));
+        authorsPI.read((char *) &ofend, sizeof(ofend));
 
         authorsPI.seekg(of, ios::beg);
-        while(authorsPI.good()){
-            int tmpnum; short tmpof;
-            int tmpnum1; short tmpof1;
-            authorsPI.read((char*)& tmpnum, sizeof(tmpnum));
-            authorsPI.read((char*)& tmpof, sizeof(tmpof));
-            authorsPI.read((char*)& tmpnum1, sizeof(tmpnum1));
-            authorsPI.read((char*)& tmpof1, sizeof(tmpof1));
+        while (authorsPI.good()) {
+            int tmpnum;
+            short tmpof;
+            int tmpnum1;
+            short tmpof1;
+            authorsPI.read((char *) &tmpnum, sizeof(tmpnum));
+            authorsPI.read((char *) &tmpof, sizeof(tmpof));
+            authorsPI.read((char *) &tmpnum1, sizeof(tmpnum1));
+            authorsPI.read((char *) &tmpof1, sizeof(tmpof1));
             authorsPI.seekg(-6, ios::cur);
-            authorsPI.write((char*)& tmpnum, sizeof(tmpnum));
-            authorsPI.write((char*)& tmpof, sizeof(tmpof));
+            authorsPI.write((char *) &tmpnum, sizeof(tmpnum));
+            authorsPI.write((char *) &tmpof, sizeof(tmpof));
         }
         authorsPI.close();
         authorsPI.open("PrimaryIndex.txt", ios::out | ios::in | ios::binary);
         authorsPI.seekg(0, ios::end);
 
-        authorsPI.write((char*)& numend, sizeof(numend));
-        authorsPI.write((char*)& ofend, sizeof(ofend));
+        authorsPI.write((char *) &numend, sizeof(numend));
+        authorsPI.write((char *) &ofend, sizeof(ofend));
         authorsPI.seekg(of, ios::beg);
-        authorsPI.write((char*)& x, sizeof(x));
-        authorsPI.write((char*)& offset, sizeof(of));
+        authorsPI.write((char *) &x, sizeof(x));
+        authorsPI.write((char *) &offset, sizeof(of));
         cntID++;
 
     }
