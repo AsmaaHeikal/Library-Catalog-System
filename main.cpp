@@ -171,8 +171,9 @@ void updatePI(const string &file, const string &index) {
 
     sort(primaryIndex.begin(), primaryIndex.end());
     //filling the index file
-    for (const auto &entry: primaryIndex) {
-        indexFile << entry.first << '|' << entry.second << "\n";
+     for (int i = 0; i < primaryIndex.size(); i++) {
+        indexFile << primaryIndex[i].first << '|' << primaryIndex[i].second ;
+        if (i <primaryIndex.size() - 2) indexFile << "\n";
     }
 
     dataFile.close();
