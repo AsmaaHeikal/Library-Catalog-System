@@ -36,6 +36,11 @@ int searchPI(string id, const string &file, const string &file2);
 
 int searchSI(string id, const string &SIfile, const string &file, const string &PIfile);
 
+void deleteRecord(char id[], string filename);
+
+void deleteAuthorSI(string id, string name);
+
+bool deleteRecordPI(string id, string filename);
 
 short cntID = 0, CntNameLL = 0, CntNameSec = 0;
 
@@ -607,3 +612,252 @@ pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>>
     }
 
 }
+
+// ##############################delete#####################################
+bool deleteRecordPI(string id, string filename){
+    // load primary index on vector of pairs <id, offset>
+    fstream file(filename, ios::in|ios::out|ios::binary);
+    vector<pair<string,  string> > primaryIndex;
+    pair<string, string> entry;
+
+    while (getline(file, entry.first, '|') && getline(file,entry.second)) {
+        primaryIndex.push_back(entry);
+    }
+
+    file.close();
+
+    // search using binary search
+    int low = 0, high = primaryIndex.size() - 1, mid=-1;
+    while(low <= high){
+        mid = (high + low) / 2;
+        if(primaryIndex[mid].first < id){
+            low = mid + 1;
+        } else if (primaryIndex[mid].first > id){
+            high = mid - 1;
+        } else {
+            break;
+        }
+    }
+
+    if(low > high ) return false;
+
+    // once found authorId delete entry
+    primaryIndex.erase(primaryIndex.begin() + mid);
+
+    // rewrite index to file
+    file.open(filename, ios::trunc|ios::out);
+    if(!file.is_open()){
+        cout << "Error: failed to open index file\n";
+        return false;
+    }
+
+    for(int i = 0; i < primaryIndex.size(); i++){
+        file << primaryIndex[i].first << '|' << primaryIndex[i].second;
+        if(i < primaryIndex.size()-1 )
+            file << "\n";
+    }
+
+    file.close();
+    return true;
+}
+
+
+
+void deleteRecord(char id[], string filename){
+    fstream file(filename, ios::out | ios::in | ios::binary);
+    if(!file.is_open()){
+        std::cout << "Deletion failed -> fail to open file\n";
+        return;
+    }
+
+    // call search function to return the offset of that record if exists
+    short offset = searchPI(id, "authorsPI.txt", "authors.txt"); // add here search call instead
+//    cout << "from delete "<<offset <<endl;
+    if (offset == -1) {
+        std::cout << "Deletion failed -> id not found\n";
+        return;
+    }
+//        deleteAuthorSI(id, name);
+    deleteRecordPI(id, filename);
+    // back to Header to find the start of available list
+    short header, deletedRecordSize, currSize;
+    file.seekg(0, ios::beg);
+    file.read((char*)&header, sizeof(header));
+
+    file.seekg(offset-2, ios :: beg); // length indicator of deleted record
+    file.read((char*)&deletedRecordSize, sizeof(deletedRecordSize));
+
+    // not the first record to delete from file
+    if(header != -1)
+    {
+        file.seekg(header - 2, ios::beg); // extract size of first record in avail list (size of first record in avail list (worst fit): largest size)
+        file.read((char*)&currSize, sizeof(currSize));
+    }
+
+    // empty avail list or deleted record size is the largest
+    // empty => header = deletedRecordOffset and deletedRecord: overwrite the first 3 bytes by *-1 (header = -1)
+    // currSize <= deletedRecordSize => header = deletedRecordOffset and deletedRecord: overwrite the first 3 bytes by *currOffset as (header = currOffset)
+    if(header == -1 or currSize<=deletedRecordSize){
+        file.seekp(offset, ios::beg);
+        file.write("*", 1);
+        file.write((char*)&header, sizeof(header)); // let the deleted record points to the second largest
+        file.seekg(0, ios::beg);
+        file.write((char*)&offset, sizeof(offset));
+        return;
+    }
+
+    short currOffset = header, nextOffset, nextSize;
+    file.seekg(currOffset+1 , ios::beg); // skip * to read the next offset
+    file.read((char*)&nextOffset , sizeof(short));
+
+    // only one item in avail list and its size is >= deleted item size
+    // let curr on avail list points to deleted item
+    if(nextOffset == -1 and currSize >= deletedRecordSize){
+        file.seekp(currOffset+1, ios::beg); // skip * to read the next offset
+        file.write((char*)&offset, sizeof(offset));
+        file.seekp(offset, ios::beg);
+        file.write("*", 1);
+        file.write((char*)&nextOffset, sizeof(nextOffset));
+        return;
+    }
+
+    file.seekg(nextOffset-2, ios::beg);   // extract size of next item
+    file.read((char*)&nextSize , sizeof(nextSize));
+
+    while(true) {
+        // right place for deleted item is found
+        if(nextSize <= deletedRecordSize){
+            file.seekp(currOffset+1, ios::beg); // skip * to write the next offset of currOffset
+            file.write((char*)&offset, sizeof(offset));
+            file.seekp(offset, ios::beg);
+            file.write("*", 1); // overwrite one byte by *
+            file.write((char*)&nextOffset, sizeof(nextOffset)); // overwrite 2 bytes by next offset of deletedOffset
+            return;
+        }
+        else
+        {
+            currOffset = nextOffset; // advance the curr to next
+            file.seekp(nextOffset+1, ios::beg);
+            file.read((char*)&nextOffset , sizeof(nextOffset));
+
+            if(nextOffset == -1){ // reach the end of avail list
+                file.seekp(currOffset + 1, ios::beg); // skip * to write the next offset of currOffset
+                file.write((char*)&offset, sizeof(offset));
+                file.seekp(offset, ios::beg);
+                file.write("*", 1);
+                file.write((char*)&nextOffset, sizeof(nextOffset));
+                break;
+            }
+
+            file.seekg(nextOffset-2, ios::beg); // extract size of next
+            file.read((char*)&nextSize , sizeof(nextSize));
+        }
+    }
+    file.close();
+}
+
+void deleteAuthorSI(string id, string name){
+    // load secondary index
+    fstream file("authorsSI.txt", ios::in|ios::out|ios::binary);
+    vector<pair<string,  string> > secondaryIndex;
+    pair<string, string> entry;
+
+    while (getline(file, entry.first, '|') && getline(file, entry.second)) {
+        secondaryIndex.push_back(entry);
+        cout << "ID->"<<entry.first<<" name->"<< entry.second<<endl;
+    }
+
+    file.close();
+    short offset = -1;
+    // search for name
+    int i;
+    for (i = 0; i < secondaryIndex.size(); i++) {
+
+        if (secondaryIndex[i].first == name) { // extract offset
+            offset = stoi(secondaryIndex[i].second);
+            cout << "Offset: " << offset << endl;
+            cout << "Found!" << endl;
+            break;
+        }
+    }
+
+
+    if(offset ==-1){
+        cout << "secondary key (not found) in secondary index\n";
+    } else {
+        cout << "secondary key (found) in secondary index\n";
+    }
+    // go to linked list
+    fstream linkedlistFile("authorsNameLL.txt", ios::in|ios::out|ios::binary);
+    // seek to offset
+    // extract the id
+    // compare id
+    // == mark #
+    // if not go to next repeat till reach -1
+    // if that we delete = -1
+    // go to secondary mark -1
+    short prev, curr = offset, next, mark=-2;
+//        cout << "offset" << offset<<endl;
+    bool found=false;
+    linkedlistFile.seekg(curr, ios::beg);
+    string ID;
+    getline(linkedlistFile, ID, '|');
+
+    if(ID == id){
+        linkedlistFile.read((char*)&next, 2);
+        secondaryIndex[i].second = to_string(next);
+
+        linkedlistFile.seekp(-2, ios::cur);
+        linkedlistFile.write((char*)&mark, 2);
+        found= true;
+
+    }
+
+    while(!found and curr != -1){
+        linkedlistFile.read((char*)&next, 2);
+
+        linkedlistFile.seekg(next, ios::beg);
+        getline(linkedlistFile, ID, '|');
+
+
+        prev = curr;
+        curr = next;
+        if(ID == id){ // edit links
+
+            linkedlistFile.read((char*)&next, 2);
+            linkedlistFile.seekg(prev, ios::beg);
+            getline(linkedlistFile, ID, '|');
+            linkedlistFile.seekp(0, ios::cur);
+            linkedlistFile.write((char*)&next, 2);
+
+            linkedlistFile.seekp(curr, ios::beg);
+            getline(linkedlistFile, ID, '|');
+            linkedlistFile.seekp(0, ios::cur);
+            linkedlistFile.write((char*)&mark, 2);
+            found= true;
+            break;
+        }
+
+    }
+
+    file.close();
+    linkedlistFile.close();
+
+    file.open("authorsSI.txt", ios::trunc|ios::out|ios::binary);
+    for (int i = 0; i < secondaryIndex.size(); i++) {
+        file << secondaryIndex[i].first;
+        file << '|';
+        file << secondaryIndex[i].second;
+
+        if (i < secondaryIndex.size() -1)
+            file << std::endl;
+    }
+
+    if (!found){
+        cout << "Error in finding (id) in the linked list of secondary index\n";
+    } else{
+        cout << "Successfully deleted from linked list\n";
+    }
+}
+
+// ###########################################################
