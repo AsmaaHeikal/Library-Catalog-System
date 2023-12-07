@@ -16,6 +16,8 @@ struct Book {
 
 void updatePI(const string &file, const string &index);
 
+void updatePI2(const string &file, const string &index);
+
 void updateBooksSI();
 
 void updateAuthorsSI();
@@ -42,6 +44,10 @@ void deleteAuthorSI(string id, string name);
 
 bool deleteRecordPI(string id, string filename);
 
+void updateAuthorName();
+
+void updateBookTitle();
+
 short cntID = 0, CntNameLL = 0, CntNameSec = 0;
 
 int main() {
@@ -57,72 +63,129 @@ int main() {
 //    searchPI(id,"authorsPI.txt","authors.txt");
 //    searchPI(id,"booksPI.txt","books.txt");
 
-//    while (true) {
-//        cout << "Welcome to the Library Catalog System\n";
-//        cout << "1. Add New Author\n";
-//        cout << "2. Add New Book\n";
-//        cout << "3. Update Author Name (Author ID)\n";
-//        cout << "4. Update Book Title (ISBN)\n";
-//        cout << "5. Delete Book (ISBN)\n";
-//        cout << "6. Delete Author (Author ID)\n";
-//        cout << "7. Print Author (Author ID)\n";
-//        cout << "8. Print Book (ISBN)\n";
-//        cout << "9. Write Query\n";
-//        cout << "10. Exit\n";
-//
-//        int choice;
-//        cout << "Enter your choice: ";
-//        cin >> choice;
-//
-//        switch (choice) {
-//            case 1: {
-//                break;
-//            }
-//            case 2: {
-//
-//                break;
-//            }
-//            case 3: {
-//
-//                break;
-//            }
-//            case 4: {
-//
-//                break;
-//            }
-//            case 5: {
-//
-//                break;
-//            }
-//            case 6: {
-//
-//                break;
-//            }
-//            case 7: {
-//
-//                break;
-//            }
-//            case 8: {
-//
-//                break;
-//            }
-//            case 9: {
-//
-//                break;
-//            }
-//            case 10: {
-//                return 0;
-//            }
-//            default: {
-//                cout << "Invalid choice. Please try again.\n";
-//                break;
-//            }
-//        }
-//    }
+    while (true) {
+        cout << "Welcome to the Library Catalog System\n";
+        cout << "1. Add New Author\n";
+        cout << "2. Add New Book\n";
+        cout << "3. Update Author Name (Author ID)\n";
+        cout << "4. Update Book Title (ISBN)\n";
+        cout << "5. Delete Book (ISBN)\n";
+        cout << "6. Delete Author (Author ID)\n";
+        cout << "7. Print Author (Author ID)\n";
+        cout << "8. Print Book (ISBN)\n";
+        cout << "9. Write Query\n";
+        cout << "10. Exit\n";
+
+        int choice;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                break;
+            }
+            case 2: {
+
+                break;
+            }
+            case 3: {
+                updateAuthorName();
+                break;
+            }
+            case 4: {
+                updateBookTitle();
+                break;
+            }
+            case 5: {
+
+                break;
+            }
+            case 6: {
+
+                break;
+            }
+            case 7: {
+
+                break;
+            }
+            case 8: {
+
+                break;
+            }
+            case 9: {
+
+                break;
+            }
+            case 10: {
+                return 0;
+            }
+            default: {
+                cout << "Invalid choice. Please try again.\n";
+                break;
+            }
+        }
+    }
 }
 
 
 void updatePI(const string &file, const string &index) {
+
+    ifstream dataFile(file);
+    ofstream indexFile(index);
+
+    //check that datafile is full
+    if (!dataFile.is_open() || !indexFile.is_open()) {
+        cerr << "Error opening files." << endl;
+        return;
+    }
+
+    //declaration
+    vector<pair<int, int>> primaryIndex;
+    string id;
+    pair<int, int> p;
+    int bitOffset = 2;
+
+    //set the cursor at the beginning of the file skipping first 2 char
+    dataFile.seekg(bitOffset, ios::beg);
+
+    //getting the length indicator of the record
+    char lengthIndicator[2];
+    dataFile.read(lengthIndicator, 2);
+    int recLen = stoi(lengthIndicator);
+    bitOffset += 2;
+
+    while (!dataFile.eof()) {
+
+        getline(dataFile, id, '|');
+
+
+        //adding the id and the bit offset of the record to the vector
+        p.first = stoi(id);
+        p.second = bitOffset;
+        primaryIndex.push_back(p);
+
+        //adding length of record to the bit offset
+        bitOffset += 2;
+        bitOffset += recLen;
+
+        //getting the length indicator of the next record
+        dataFile.seekg((recLen - id.length()-1), ios::cur);
+        dataFile.read(lengthIndicator, 2);
+        recLen = stoi(lengthIndicator);
+
+    }
+
+    sort(primaryIndex.begin(), primaryIndex.end());
+    //filling the index file
+    for (const auto &entry: primaryIndex) {
+        indexFile << entry.first << '|' << entry.second << "\n";
+    }
+
+    dataFile.close();
+    indexFile.close();
+}
+
+void updatePI2(const string &file, const string &index) {
 
     ifstream dataFile(file);
     ofstream indexFile(index);
@@ -390,7 +453,6 @@ int searchPI(string id, const string &file, const string &file2) {
     }
     auto x = binarySearch(indx, stoi(id));
     if (x.first) {
-        cout << "Found: ";
 
         int bitoffset = stoi(x.second.second);
 
@@ -861,4 +923,66 @@ void deleteAuthorSI(string id, string name){
     }
 }
 
-// ###########################################################
+void updateAuthorName() {
+
+    ifstream dataFile("authors.txt");
+
+    if (!dataFile.is_open()) {
+        cerr << "Error opening the file." << endl;
+        return;
+     }
+
+    string authorID;
+    cout << "Please enter the author ID you want to change: ";
+    cin >> authorID;
+
+    // Search for the author using authorID in the primary index
+    int bitOffset = searchPI(authorID, "authorsPI.txt", "authors.txt");
+    if (bitOffset != -1) {
+        cout << "Author found!"<< endl;
+        // Read the existing author record
+        string authorRecord = search(bitOffset, "authors.txt");
+        cout << "Here's the current author record: " << authorRecord << endl;
+        int firstPos = authorRecord.find('|');
+        int lastPos = authorRecord.rfind('|');
+        int sizeRecord = authorRecord.length();
+
+        // Ask the user for the new author name
+        string newAuthorName;
+        cout << "Enter the new author name: ";
+        cin.ignore(); // Clear the newline character from the buffer
+        getline(cin, newAuthorName);
+
+        string recordPrefix = authorRecord.substr(0, firstPos + 1);
+        string recordSuffix = authorRecord.substr(lastPos);
+        string newAuthorRecord = recordPrefix + newAuthorName + recordSuffix;
+        newAuthorRecord = to_string(newAuthorRecord.length()) + newAuthorRecord;
+        string stringSize = to_string(sizeRecord);
+        authorRecord =stringSize +authorRecord;
+        // Update author file
+        string allAuthors;
+        getline(dataFile, allAuthors);
+        dataFile.close();
+        ofstream writeFile("authors.txt", ios::out | ios::trunc);
+        allAuthors.replace(bitOffset - stringSize.length(), authorRecord.length(), newAuthorRecord);
+        writeFile << allAuthors;
+        writeFile.close();
+        cout << "Author name updated successfully!" << endl;
+        // Update the index
+        updatePI("authors.txt", "authorsPI.txt");
+
+    }
+    else{
+        cout << "Author ID not found." << endl;
+    }
+}
+
+void updateBookTitle() {
+    int isbn;
+    cout << "Please enter the book ID";
+    cin >> isbn;
+}
+
+void updateSecondaryIndex(const string& SIfile, const string& newKey, const string& oldKey){
+
+}
