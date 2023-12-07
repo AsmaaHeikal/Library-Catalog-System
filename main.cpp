@@ -143,9 +143,9 @@ void updatePI(const string &file, const string &index) {
     dataFile.seekg(bitOffset, ios::beg);
 
     //getting the length indicator of the record
-    char lengthIndicator[2];
-    dataFile.read(lengthIndicator, 2);
-    int recLen = stoi(lengthIndicator);
+    short lengthIndicator;
+    dataFile.read((char*)&lengthIndicator, 2);
+    int recLen = lengthIndicator;
     bitOffset += 2;
 
     while (!dataFile.eof()) {
@@ -164,8 +164,8 @@ void updatePI(const string &file, const string &index) {
 
         //getting the length indicator of the next record
         dataFile.seekg((recLen - id.length() - 1), ios::cur);
-        dataFile.read(lengthIndicator, 2);
-        recLen = stoi(lengthIndicator);
+        dataFile.read((char*)&lengthIndicator, 2);
+        recLen = lengthIndicator;
 
     }
 
