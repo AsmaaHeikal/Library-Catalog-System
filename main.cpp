@@ -1,4 +1,9 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <vector>
+
 
 using namespace std;
 
@@ -28,9 +33,9 @@ void insertName(char name[30], char id[15]);
 
 void Add(Author author);
 
-pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>> &index, const int &id);
+pair<bool, pair<string, string> > binarySearch(const vector<pair<string, string> > &index, const int &id);
 
-pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>> &index, const string &id);
+pair<bool, pair<string, string> > binarySearch(const vector<pair<string, string> > &index, const string &id);
 
 string search(int bitOffset, const string &file);
 
@@ -140,7 +145,7 @@ void updatePI(const string &file, const string &index) {
     }
 
     //declaration
-    vector<pair<int, int>> primaryIndex;
+    vector<pair<int, int> > primaryIndex;
     string id;
     pair<int, int> p;
     int bitOffset = 2;
@@ -199,7 +204,7 @@ void updatePI2(const string &file, const string &index) {
     }
 
     //declaration
-    vector<pair<int, int>> primaryIndex;
+    vector<pair<int, int> > primaryIndex;
     string id;
     pair<int, int> p;
     int bitOffset = 2;
@@ -257,7 +262,7 @@ void updateBooksSI() {
     }
 
     //declaration
-    vector<pair<int, string>> secondaryIndex;
+    vector<pair<int, string> > secondaryIndex;
     string id, bookTitle;
     pair<int, string> p;
 
@@ -331,7 +336,7 @@ void updateAuthorsSI() {
     }
 
     //declaration
-    vector<pair<string, string>> secondaryIndex;
+    vector<pair<string, string> > secondaryIndex;
     string id, authorName;
     pair<string, string> p;
 
@@ -401,7 +406,7 @@ int searchSI(string id, const string &SIfile, const string &file, const string &
     }
 
     SIFile.seekg(0, ios::beg);
-    vector<pair<string, string>> indx;
+    vector<pair<string, string> > indx;
     pair<string, string> entry;
     while (!SIFile.eof()) {
 
@@ -445,7 +450,7 @@ int searchPI(string id, const string &file, const string &file2) {
     }
 
     indexFile.seekg(0, ios::beg);
-    vector<pair<string, string>> indx;
+    vector<pair<string, string> > indx;
     pair<string, string> entry;
     while (!indexFile.eof()) {
 
@@ -634,11 +639,11 @@ void insertAuthorInPrimary(const char *id, short offset) {
     authorsPI.close();
 }
 
-pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>> &index, const int &id) {
+pair<bool, pair<string, string> > binarySearch(const vector<pair<string, string> > &index, const int &id) {
 
     int low = 0;
     int high = index.size() - 1;
-    pair<bool, pair<string, string>> result;
+    pair<bool, pair<string, string> > result;
     result.first = false;
 
     while (low <= high) {
@@ -656,11 +661,11 @@ pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>>
 
 }
 
-pair<bool, pair<string, string>> binarySearch(const vector<pair<string, string>> &index, const string &id) {
+pair<bool, pair<string, string> > binarySearch(const vector<pair<string, string> > &index, const string &id) {
 
     int low = 0;
     int high = index.size() - 1;
-    pair<bool, pair<string, string>> result;
+    pair<bool, pair<string, string> > result;
     result.first = false;
 
     while (low <= high) {
