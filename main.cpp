@@ -149,9 +149,9 @@ void updatePI(const string &file, const string &index) {
     dataFile.seekg(bitOffset, ios::beg);
 
     //getting the length indicator of the record
-    short lengthIndicator;
-    dataFile.read((char*)&lengthIndicator, 2);
-    int recLen = lengthIndicator;
+    char lengthIndicator[2];
+    dataFile.read(lengthIndicator, 2);
+    int recLen = stoi(lengthIndicator);
     bitOffset += 2;
 
     while (!dataFile.eof()) {
@@ -169,18 +169,16 @@ void updatePI(const string &file, const string &index) {
         bitOffset += recLen;
 
         //getting the length indicator of the next record
-        dataFile.seekg((recLen - id.length() - 1), ios::cur);
-        dataFile.read((char*)&lengthIndicator, 2);
-        recLen = lengthIndicator;
+        dataFile.seekg((recLen - id.length()-1), ios::cur);
+        dataFile.read(lengthIndicator, 2);
+        recLen = stoi(lengthIndicator);
 
     }
 
     sort(primaryIndex.begin(), primaryIndex.end());
     //filling the index file
-    for (int i = 0; i < primaryIndex.size(); i++) {
-        indexFile << primaryIndex[i].first << '|' << primaryIndex[i].second ;
-        cout << primaryIndex[i].first << '|' << primaryIndex[i].second<<endl;
-        if (i <primaryIndex.size() - 1) indexFile << "\n";
+    for (const auto &entry: primaryIndex) {
+        indexFile << entry.first << '|' << entry.second << "\n";
     }
 
     dataFile.close();
