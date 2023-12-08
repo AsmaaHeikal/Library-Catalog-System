@@ -143,15 +143,15 @@ void updatePI(const string &file, const string &index) {
     vector<pair<int, int>> primaryIndex;
     string id;
     pair<int, int> p;
-    int bitOffset = 2;
+    short bitOffset = 2;
 
     //set the cursor at the beginning of the file skipping first 2 char
     dataFile.seekg(bitOffset, ios::beg);
 
     //getting the length indicator of the record
-    char lengthIndicator[2];
-    dataFile.read(lengthIndicator, 2);
-    int recLen = stoi(lengthIndicator);
+    short lengthIndicator;
+    dataFile.read((char*)&lengthIndicator, 2);
+    int recLen = lengthIndicator;
     bitOffset += 2;
 
     while (!dataFile.eof()) {
@@ -169,21 +169,24 @@ void updatePI(const string &file, const string &index) {
         bitOffset += recLen;
 
         //getting the length indicator of the next record
-        dataFile.seekg((recLen - id.length()-1), ios::cur);
-        dataFile.read(lengthIndicator, 2);
-        recLen = stoi(lengthIndicator);
+        dataFile.seekg((recLen - id.length() - 1), ios::cur);
+        dataFile.read((char*)&lengthIndicator, 2);
+        recLen = lengthIndicator;
 
     }
 
     sort(primaryIndex.begin(), primaryIndex.end());
     //filling the index file
-    for (const auto &entry: primaryIndex) {
-        indexFile << entry.first << '|' << entry.second << "\n";
+    for (int i = 0; i < primaryIndex.size(); i++) {
+        indexFile << primaryIndex[i].first << '|' << primaryIndex[i].second ;
+        cout << primaryIndex[i].first << '|' << primaryIndex[i].second<<endl;
+        if (i <primaryIndex.size() - 2) indexFile << "\n";
     }
 
     dataFile.close();
     indexFile.close();
 }
+
 
 void updatePI2(const string &file, const string &index) {
 
